@@ -23,6 +23,7 @@ class MainActivity : FlutterActivity() {
                     if (data != null) {
                         UpcomingClassWidget.saveFullData(this, data)
                         UpcomingClassWidget.updateAllWidgets(this)
+                        UpcomingClassWidget.updateBackgroundRefresh(this)
                     }
                     result.success(null)
                 }

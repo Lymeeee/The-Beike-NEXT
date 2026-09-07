@@ -163,8 +163,8 @@ struct Provider: TimelineProvider {
 
         // Check summer term without start date
         if (data.termSeason ?? 1) >= 3
-            && data.summerTermStartMonth == nil
-            || data.summerTermStartDay == nil {
+            && (data.summerTermStartMonth == nil
+                || data.summerTermStartDay == nil) {
             let entry = ClassEntry(date: now, hasClass: false,
                 className: "未设定小学期起始日",
                 timeRange: "", location: "", teacher: "")

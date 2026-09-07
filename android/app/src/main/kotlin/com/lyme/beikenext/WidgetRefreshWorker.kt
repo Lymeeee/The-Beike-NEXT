@@ -41,6 +41,10 @@ class WidgetRefreshWorker(
         return try {
             val context = applicationContext
 
+            if (UpcomingClassWidget.isHolidayMode(context)) {
+                return Result.success()
+            }
+
             // Check if data is fresh enough
             val prefs = context.getSharedPreferences(
                 "com.lyme.beikenext.widget",

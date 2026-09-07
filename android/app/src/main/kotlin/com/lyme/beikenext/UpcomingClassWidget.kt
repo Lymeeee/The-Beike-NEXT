@@ -44,7 +44,26 @@ class UpcomingClassWidget : AppWidgetProvider() {
             prefs.edit()
                 .putString(KEY_FULL_DATA, json)
                 .apply()
-            scheduleWorkManagerRefresh(context)
+        }
+
+        fun isHolidayMode(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val json = prefs.getString(KEY_FULL_DATA, null) ?: return false
+            return try {
+                JSONObject(json).optBoolean("holidayMode", false)
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        fun updateBackgroundRefresh(context: Context) {
+            if (isHolidayMode(context)) {
+                cancelAutoRefresh(context)
+                WidgetRefreshWorker.cancel(context)
+            } else {
+                scheduleAutoRefresh(context)
+                scheduleWorkManagerRefresh(context)
+            }
         }
 
         fun scheduleAutoRefresh(context: Context) {
@@ -478,14 +497,13 @@ class UpcomingClassWidget : AppWidgetProvider() {
         when (intent.action) {
             ACTION_AUTO_REFRESH -> {
                 updateAllWidgets(context)
-                scheduleAutoRefresh(context)
+                updateBackgroundRefresh(context)
             }
         }
     }
 
     override fun onEnabled(context: Context) {
-        scheduleAutoRefresh(context)
-        scheduleWorkManagerRefresh(context)
+        updateBackgroundRefresh(context)
     }
 
     override fun onDisabled(context: Context) {
