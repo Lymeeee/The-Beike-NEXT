@@ -7,6 +7,7 @@ import '/utils/app_bar.dart';
 import '/services/widget_updater.dart';
 import '/utils/sync_embeded.dart';
 import '/utils/haptic.dart';
+import '/utils/navigation.dart';
 import 'common.dart';
 import 'table.dart';
 import 'custom_course_dialog.dart';
@@ -328,7 +329,7 @@ class _CurriculumPageState extends State<CurriculumPage>
                 ),
                 onPressed: () {
                   Haptics.selection();
-                  context.router.pushPath('/courses/account');
+                  pushPathGuarded(context, '/courses/account');
                 },
               ),
               const SizedBox(height: 16),

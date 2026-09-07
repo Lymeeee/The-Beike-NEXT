@@ -1,5 +1,7 @@
 // Copyright (c) 2025, Harry Huang
 
+import 'dart:io' show Platform;
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'utils/haptic.dart';
@@ -21,32 +23,54 @@ class _BottomTab {
   final IconData icon;
   final String label;
   final String rootPath;
-  final List<String> pathPrefixes;
 
   const _BottomTab({
     required this.icon,
     required this.label,
     required this.rootPath,
-    required this.pathPrefixes,
   });
 }
 
 const _bottomTabs = [
-  _BottomTab(
-    icon: Icons.home,
-    label: '首页',
-    rootPath: '/',
-    pathPrefixes: ['/'],
-  ),
-  _BottomTab(
-    icon: Icons.more_horiz,
-    label: '更多',
-    rootPath: '/more/settings',
-    pathPrefixes: ['/more/', '/courses/', '/net/'],
-  ),
+  _BottomTab(icon: Icons.home, label: '首页', rootPath: '/'),
+  _BottomTab(icon: Icons.more_horiz, label: '更多', rootPath: '/more/settings'),
 ];
 
-int _lastUserTabIndex = 0;
+// Tab the user last selected, or the tab of the tab root last shown.
+// Sub-pages highlight this tab instead of the one their path belongs to.
+int _originTabIndex = 0;
+
+// Slide in from the right when pushed, back out to the right when popped.
+Widget _slideTransitionsBuilder(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return SlideTransition(
+    position: Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+    child: child,
+  );
+}
+
+// 250ms sits in M3's medium motion band (250-400ms); easeOutCubic matches
+// the app's existing curve. On Android the slide drives the predictive
+// back gesture. Other platforms keep their native transitions (e.g.
+// Cupertino slide with edge-swipe back on iOS).
+RouteType get _slideRouteType {
+  if (Platform.isAndroid) {
+    return RouteType.custom(
+      transitionsBuilder: _slideTransitionsBuilder,
+      duration: const Duration(milliseconds: 250),
+      reverseDuration: const Duration(milliseconds: 250),
+      enablePredictiveBackGesture: true,
+    );
+  }
+  return RouteType.adaptive();
+}
 
 class AppRouter {
   static final router = RootStackRouter.build(
@@ -54,67 +78,80 @@ class AppRouter {
       NamedRouteDef(
         name: 'HomeRoute',
         path: '/',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const HomePage()),
       ),
       NamedRouteDef(
         name: 'CourseAccountRoute',
         path: '/courses/account',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const AccountPage()),
       ),
       NamedRouteDef(
         name: 'CurriculumRoute',
         path: '/courses/curriculum',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const CurriculumPage()),
       ),
       NamedRouteDef(
         name: 'CourseSelectionRoute',
         path: '/courses/selection',
+        type: _slideRouteType,
         builder: (context, data) =>
             MainLayout(child: const CourseSelectionPage()),
       ),
       NamedRouteDef(
         name: 'ExamRoute',
         path: '/courses/exam',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const ExamPage()),
       ),
       NamedRouteDef(
         name: 'GradeRoute',
         path: '/courses/grade',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const GradePage()),
       ),
       NamedRouteDef(
         name: 'NetDashboardRoute',
         path: '/net/dashboard',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const NetDashboardPage()),
       ),
       NamedRouteDef(
         name: 'NetTrafficRoute',
         path: '/net/traffic',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const NetTrafficPage()),
       ),
       NamedRouteDef(
         name: 'NetElectricityRoute',
         path: '/net/electricity',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const ElectricityPage()),
       ),
       NamedRouteDef(
         name: 'WebVpnRoute',
         path: '/net/webvpn',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const WebVpnPage()),
       ),
       NamedRouteDef(
         name: 'SettingsRoute',
         path: '/more/settings',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const SettingsPage()),
       ),
       NamedRouteDef(
         name: 'UpdateRoute',
         path: '/more/update',
+        type: _slideRouteType,
         builder: (context, data) => MainLayout(child: const UpdatePage()),
       ),
       NamedRouteDef(
         name: 'EmptyClassroomRoute',
         path: '/net/empty-classroom',
+        type: _slideRouteType,
         builder: (context, data) =>
             MainLayout(child: const EmptyClassroomPage()),
       ),
@@ -132,68 +169,52 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
-  int _activeTab = 0;
-  bool _userSwitchedTab = false;
-
-  static const _tabPages = <Widget>[
-    HomePage(),
-    SettingsPage(),
-  ];
+  bool _wasCurrentRoute = false;
 
   String get _path => context.routeData.path;
 
+  bool get _isTabRoot => _bottomTabs.any((t) => t.rootPath == _path);
+
+  int get _pathTabIndex {
+    final path = _path;
+    final index = _bottomTabs.indexWhere((t) => t.rootPath == path);
+    return index == -1 ? 0 : index;
+  }
+
+  bool get _isCurrentRoute {
+    final route = ModalRoute.of(context);
+    return route == null || route.isCurrent;
+  }
+
   void _onTabSelected(int index) {
     Haptics.selection();
-    _lastUserTabIndex = index;
-    final isOnTabRoot = _bottomTabs.any((t) => t.rootPath == _path);
+    _originTabIndex = index;
 
-    if (isOnTabRoot) {
-      if (_activeTab != index) {
-        _userSwitchedTab = true;
-        setState(() => _activeTab = index);
-      }
+    final router = context.router;
+    final targetPath = _bottomTabs[index].rootPath;
+    if (router.stack.any((page) => page.routeData.path == targetPath)) {
+      router.popUntilRouteWithPath(targetPath);
     } else {
-      context.router.replacePath(_bottomTabs[index].rootPath);
+      router.pushPath(targetPath);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final path = _path;
-    final isTabRoot = _bottomTabs.any((t) => t.rootPath == path);
-
-    if (isTabRoot) {
-      if (!_userSwitchedTab) {
-        final tabIndex = _bottomTabs.indexWhere((t) => t.rootPath == path);
-        _activeTab = tabIndex;
+    if (_isTabRoot) {
+      // When a tab root becomes visible again, sub-pages entered from it
+      // should highlight this tab.
+      final isCurrent = _isCurrentRoute;
+      if (isCurrent && !_wasCurrentRoute) {
+        _originTabIndex = _pathTabIndex;
       }
-      _lastUserTabIndex = _activeTab;
+      _wasCurrentRoute = isCurrent;
     }
-    _userSwitchedTab = false;
 
-    final scaffold = Scaffold(
-      body: isTabRoot
-          ? ClipRect(
-              child: Stack(
-                children: List.generate(_tabPages.length, (i) {
-                  final isActive = _activeTab == i;
-                  return IgnorePointer(
-                    ignoring: !isActive,
-                    child: AnimatedSlide(
-                      offset: isActive
-                          ? Offset.zero
-                          : Offset(_activeTab > i ? -1.0 : 1.0, 0.0),
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOutCubic,
-                      child: _tabPages[i],
-                    ),
-                  );
-                }),
-              ),
-            )
-          : widget.child,
+    return Scaffold(
+      body: widget.child,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _lastUserTabIndex,
+        selectedIndex: _isTabRoot ? _pathTabIndex : _originTabIndex,
         onDestinationSelected: _onTabSelected,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: _bottomTabs
@@ -206,7 +227,5 @@ class _MainLayoutState extends State<MainLayout> {
             .toList(),
       ),
     );
-
-    return scaffold;
   }
 }

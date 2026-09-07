@@ -3,6 +3,7 @@ import 'package:auto_route/auto_route.dart';
 import '/types/courses.dart';
 import '/types/base.dart';
 import '/utils/haptic.dart';
+import '/utils/navigation.dart';
 
 String formatCacheTime(BaseDataClass cachedData) {
   final time = cachedData.$lastUpdateTime!;
@@ -276,7 +277,7 @@ class _ChooseLatestCardState extends State<ChooseLatestCard> {
                       ),
                       onPressed: () {
                         Haptics.selection();
-                        context.router.pushPath('/courses/account');
+                        pushPathGuarded(context, '/courses/account');
                       },
                     ),
                     const SizedBox(width: 8),

@@ -4,6 +4,7 @@ import '/services/provider.dart';
 import '/types/courses.dart';
 import '/utils/app_bar.dart';
 import '/utils/haptic.dart';
+import '/utils/navigation.dart';
 import 'common.dart';
 import 'list.dart';
 
@@ -223,7 +224,7 @@ class _CourseSelectionPageState extends State<CourseSelectionPage> {
                               ),
                               onPressed: () {
                                 Haptics.selection();
-                                context.router.pushPath('/courses/account');
+                                pushPathGuarded(context, '/courses/account');
                               },
                             ),
                             const SizedBox(height: 16),
