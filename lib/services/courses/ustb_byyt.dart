@@ -118,15 +118,9 @@ class UstbByytService extends BaseCoursesService {
   String get defaultBaseUrl => 'https://byyt.ustb.edu.cn';
 
   @override
-  set baseUrl(String url) {
-    super.baseUrl = url;
-    _dio.options.baseUrl = url;
-  }
-
-  @override
   Future<void> doLogin(String cookie) async {
     try {
-      final uri = Uri.parse(baseUrl);
+      final uri = Uri.parse(defaultBaseUrl);
       final cookies = cookie
           .split(';')
           .map((c) {

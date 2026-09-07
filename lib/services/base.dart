@@ -16,7 +16,6 @@ enum ServiceStatus {
 mixin BaseService on ChangeNotifier {
   ServiceStatus _status = ServiceStatus.offline;
   String? _errorMessage;
-  String? _baseUrl;
 
   ServiceStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -26,12 +25,6 @@ mixin BaseService on ChangeNotifier {
   bool get hasError => _status == ServiceStatus.error;
 
   String get defaultBaseUrl => '';
-  String get baseUrl => _baseUrl ?? defaultBaseUrl;
-
-  set baseUrl(String url) {
-    _baseUrl = url;
-    notifyListeners();
-  }
 
   void setStatus(ServiceStatus status, [String? errorMessage]) {
     // Avoid needless rebuilds

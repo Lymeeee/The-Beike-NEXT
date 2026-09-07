@@ -35,12 +35,6 @@ class DrcomNetService extends BaseNetService {
   String get defaultBaseUrl => 'https://zifuwu.ustb.edu.cn';
 
   @override
-  set baseUrl(String url) {
-    super.baseUrl = url;
-    _dio.options.baseUrl = url;
-  }
-
-  @override
   Future<NetDashboardSessionState> doGetSessionState() async {
     final response = await _dio.get(
       '/Self/login/',

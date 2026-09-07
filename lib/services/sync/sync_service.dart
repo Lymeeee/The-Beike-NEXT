@@ -6,11 +6,6 @@ class SyncService extends BaseSyncService {
   String get defaultBaseUrl => '';
 
   @override
-  Future<List<Announcement>> getAnnouncements() async {
-    return [];
-  }
-
-  @override
   Future<ReleaseInfo?> getRelease() async {
     return null;
   }

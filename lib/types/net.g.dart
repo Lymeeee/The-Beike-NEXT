@@ -125,24 +125,3 @@ Map<String, dynamic> _$MonthlyBillToJson(MonthlyBill instance) =>
       'createTime': instance.createTime.toIso8601String(),
     };
 
-RealtimeUsage _$RealtimeUsageFromJson(Map<String, dynamic> json) =>
-    RealtimeUsage(
-        v4: (json['v4'] as num).toDouble(),
-        v6: (json['v6'] as num).toDouble(),
-        time: DateTime.parse(json['time'] as String),
-      )
-      ..$lastUpdateTime = _$JsonConverterFromJson<String, DateTime>(
-        json[r'$lastUpdateTime'],
-        const UTCConverter().fromJson,
-      );
-
-Map<String, dynamic> _$RealtimeUsageToJson(RealtimeUsage instance) =>
-    <String, dynamic>{
-      r'$lastUpdateTime': _$JsonConverterToJson<String, DateTime>(
-        instance.$lastUpdateTime,
-        const UTCConverter().toJson,
-      ),
-      'v4': instance.v4,
-      'v6': instance.v6,
-      'time': instance.time.toIso8601String(),
-    };
