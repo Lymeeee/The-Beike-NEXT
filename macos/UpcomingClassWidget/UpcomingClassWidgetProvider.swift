@@ -122,8 +122,8 @@ struct Provider: TimelineProvider {
         }
 
         if (data.termSeason ?? 1) >= 3
-            && data.summerTermStartMonth == nil
-            || data.summerTermStartDay == nil {
+            && (data.summerTermStartMonth == nil
+                || data.summerTermStartDay == nil) {
             return [ClassEntry(date: now, hasClass: false,
                 className: "未设定小学期起始日",
                 timeRange: "", location: "", teacher: "")]
